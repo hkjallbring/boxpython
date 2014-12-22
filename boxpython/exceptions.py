@@ -13,7 +13,7 @@ class BoxError(Exception):
         self.error_description = None
 
         if hasattr(attributes, 'iteritems'):
-            for (key, value) in attributes.iteritems():
+            for (key, value) in attributes.items():
                 if key in self.__dict__:
                     self.__dict__[key] = value
 

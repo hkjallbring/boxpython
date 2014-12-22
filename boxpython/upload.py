@@ -1,4 +1,4 @@
-from mimetools import choose_boundary
+from email.generator import _make_boundary
 from requests.packages.urllib3.filepost import iter_fields
 from requests.packages.urllib3.fields import guess_content_type
 from io import BytesIO
@@ -32,7 +32,7 @@ class MultipartUploadWrapper(object):
 
     def __create_request_parts(self, files):
         request_list = []
-        boundary = choose_boundary()
+        boundary = _make_boundary()
         content_length = 0
 
         boundary_string = b'--%s\r\n' % (boundary)
@@ -101,7 +101,7 @@ class MultipartUploadWrapper(object):
     def __iter__(self):
         return self
 
-    def next(self):
+    def __next__(self):
         data = self.__read(self._chunk_size)
         l = len(data)
         if self._progress_callback:

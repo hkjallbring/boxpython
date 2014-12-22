@@ -1,5 +1,5 @@
 import requests
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import json
 from .upload import MultipartUploadWrapper
 
@@ -21,7 +21,7 @@ class BoxRestRequest(object):
                     (BoxRestRequest.AUTH_PREFIX, self.client_id)
 
         if redirect_uri:
-            url += "&redirect_uri=%s" % urllib.quote_plus(redirect_uri)
+            url += "&redirect_uri=%s" % urllib.parse.quote_plus(redirect_uri)
 
         return url
 

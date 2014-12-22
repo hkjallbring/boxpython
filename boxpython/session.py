@@ -73,7 +73,7 @@ class BoxSession(object):
                 att = response.json()
             else:
                 att = {}
-        except Exception, ex:
+        except Exception as ex:
             raise BoxHttpResponseError(ex)
 
         if response.status_code >= 400:
@@ -105,7 +105,7 @@ class BoxSession(object):
 
         try:
             att = self.__check_response(resp, stream)
-        except BoxError, ex:
+        except BoxError as ex:
             if ex.status != 401:
                 raise
             self.__refresh_access_token()
@@ -214,7 +214,7 @@ class BoxSession(object):
         """
         return self.__request("POST", "folders",
                         data={ "name": name,
-                               "parent": {"id": unicode(parent_folder_id)} })
+                               "parent": {"id": str(parent_folder_id)} })
 
     def delete_folder(self, folder_id, recursive=True):
         """Delete an existing folder
@@ -234,7 +234,7 @@ class BoxSession(object):
             requests.exceptions.*: Any connection related problem.
         """
         return self.__request("DELETE", "folders/%s" % (folder_id, ),
-                        querystring={'recursive': unicode(recursive).lower()})
+                        querystring={'recursive': str(recursive).lower()})
 
     def get_folder_items(self, folder_id,
                             limit=100, offset=0, fields_list=None):
@@ -290,7 +290,7 @@ class BoxSession(object):
         """
         try:
             return self.__do_upload_file(name, folder_id, file_path)
-        except BoxError, ex:
+        except BoxError as ex:
             if ex.status != 401:
                 raise
             #tokens had been refreshed, so we start again the upload
@@ -322,7 +322,7 @@ class BoxSession(object):
         """
         try:
             return self.__do_upload_file(name, folder_id, file_path, file_id)
-        except BoxError, ex:
+        except BoxError as ex:
             if ex.status != 401:
                 raise
             #tokens had been refreshed, so we start again the upload
@@ -334,10 +334,10 @@ class BoxSession(object):
             if file_id_to_update is None:
                 cmd = "files/content"
             else:
-                cmd = "files/" + unicode(file_id_to_update) + "/content"
+                cmd = "files/" + str(file_id_to_update) + "/content"
             return self.__request("POST", cmd,
                                 files = {'filename': (name, file_obj)},
-                                data = {'parent_id': unicode(folder_id)},
+                                data = {'parent_id': str(folder_id)},
                                 json_data = False,
                                 raise_if_token_expired=True)
         finally:
@@ -385,7 +385,7 @@ class BoxSession(object):
             return self.__do_chunk_upload_file(name, folder_id, file_path,
                                     progress_callback,
                                     chunk_size)
-        except BoxError, ex:
+        except BoxError as ex:
             if ex.status != 401:
                 raise
             #tokens had been refreshed, so we start again the upload
@@ -399,7 +399,7 @@ class BoxSession(object):
 
         file_obj = open(file_path, 'rb')
         try:
-            muw = MultipartUploadWrapper({'parent_id': unicode(folder_id),
+            muw = MultipartUploadWrapper({'parent_id': str(folder_id),
                                           'filename': (name, file_obj)},
                                           progress_callback=progress_callback,
                                           chunk_size=chunk_size)
@@ -452,8 +452,8 @@ class BoxSession(object):
             requests.exceptions.*: Any connection related problem.
         """
 
-        return self.__request("POST", "/files/" + unicode(file_id) + "/copy",
-                        data={ "parent": {"id": unicode(dest_folder_id)} })
+        return self.__request("POST", "/files/" + str(file_id) + "/copy",
+                        data={ "parent": {"id": str(dest_folder_id)} })
 
     def download_file(self, file_id, dest_file_path,
                             progress_callback=None,
@@ -492,7 +492,7 @@ class BoxSession(object):
                                                 json_data=False)
             total = -1
             if hasattr(req, 'headers'):
-                lower_headers = {k.lower():v for k,v in req.headers.items()}
+                lower_headers = {k.lower():v for k,v in list(req.headers.items())}
                 if 'content-length' in lower_headers:
                     total = lower_headers['content-length']
 
@@ -545,7 +545,7 @@ class BoxSession(object):
             requests.exceptions.*: Any connection related problem.
         """
         query_string = {}
-        for key, value in kwargs.iteritems():
+        for key, value in kwargs.items():
             query_string[key] = value
         return self.__request("GET","search",querystring=query_string)
 
@@ -571,5 +571,5 @@ show_debug_messages = False
 def log_debug(message):
     if show_debug_messages == False:
         return
-    print '------------------------'
-    print message
+    print('------------------------')
+    print(message)

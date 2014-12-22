@@ -1,7 +1,7 @@
 import unittest
-import urlparse
+import urllib.parse
 import boxpython
-import urllib
+import urllib.request, urllib.parse, urllib.error
 import httpretty
 import json
 import tempfile
@@ -16,18 +16,18 @@ class BoxPythonInteractiveScenarioTest(unittest.TestCase):
         self.token_file = "/tmp/test_token.txt"
 
         if interactive:
-            inputresp = raw_input('Use client id and secret'\
+            inputresp = input('Use client id and secret'\
                                     ' from file %s? [y,n]' % self.data_file)
 
         if interactive and inputresp.lower() != 'y':
-            client_id = raw_input('Write your client id :')
-            client_secret = raw_input('Write your client secret :')
+            client_id = input('Write your client id :')
+            client_secret = input('Write your client secret :')
             self.__save_pair(self.data_file, client_id, client_secret)
         else:
             client_id, client_secret = self.__load_pair(self.data_file)
 
         if interactive:
-            inputresp = raw_input('Use access and refresh token' \
+            inputresp = input('Use access and refresh token' \
                                     ' from file %s? [y,n]' % self.token_file)
 
         if interactive and inputresp.lower() != 'y':
@@ -36,7 +36,7 @@ class BoxPythonInteractiveScenarioTest(unittest.TestCase):
 
             import webbrowser
             webbrowser.open(url)
-            auth_code = raw_input('Go to %s and write auth code :' % url)
+            auth_code = input('Go to %s and write auth code :' % url)
 
             access_token, refresh_token = boxflow.get_access_tokens(auth_code)
 
@@ -100,7 +100,7 @@ class BoxPythonInteractiveScenarioTest(unittest.TestCase):
     def __create_boxpython_test_folder(self, box):
         try:
             resp = box.create_folder("boxpython_test_folder")
-        except boxpython.BoxError, ex:
+        except boxpython.BoxError as ex:
             if ex.status != 409:
                 raise
             folder_id = box.find_id_in_folder("boxpython_test_folder")
@@ -129,14 +129,14 @@ class BoxPythonInteractiveScenarioTest(unittest.TestCase):
         self.assertTrue('avatar_url' in resp)
 
         resp = box.get_folder_items(folder_id)
-        self.assertEqual(resp, {u'total_count': 0, u'offset': 0, u'limit': 100, u'order': [{u'direction': u'ASC', u'by': u'type'}, {u'direction': u'ASC', u'by': u'name'}], u'entries': []})
+        self.assertEqual(resp, {'total_count': 0, 'offset': 0, 'limit': 100, 'order': [{'direction': 'ASC', 'by': 'type'}, {'direction': 'ASC', 'by': 'name'}], 'entries': []})
 
         resp = box.get_folder_items(folder_id, limit=1000, offset=2)
-        self.assertEqual(resp, {u'total_count': 0, u'offset': 2, u'limit': 1000, u'order': [{u'direction': u'ASC', u'by': u'type'}, {u'direction': u'ASC', u'by': u'name'}], u'entries': []})
+        self.assertEqual(resp, {'total_count': 0, 'offset': 2, 'limit': 1000, 'order': [{'direction': 'ASC', 'by': 'type'}, {'direction': 'ASC', 'by': 'name'}], 'entries': []})
 
         resp = box.get_folder_items(folder_id, limit=1000, offset=2,
                                         fields_list=['name', 'created_at'])
-        self.assertEqual(resp, {u'total_count': 0, u'offset': 2, u'limit': 1000, u'order': [{u'direction': u'ASC', u'by': u'type'}, {u'direction': u'ASC', u'by': u'name'}], u'entries': []})
+        self.assertEqual(resp, {'total_count': 0, 'offset': 2, 'limit': 1000, 'order': [{'direction': 'ASC', 'by': 'type'}, {'direction': 'ASC', 'by': 'name'}], 'entries': []})
 
         resp = box.create_folder("new_folder", folder_id)
         new_folder = int(resp['id'])
@@ -313,7 +313,7 @@ class BoxPythonUnitTest(unittest.TestCase):
 
         query_body = httpretty.last_request().body
 
-        self.assertEqual(urlparse.parse_qs(query_body),
+        self.assertEqual(urllib.parse.parse_qs(query_body),
             {   "client_id": [self.client_id],
                 "client_secret": [self.client_secret],
                 "grant_type": ["refresh_token"],
@@ -482,13 +482,13 @@ class BoxAuthenticateFlowUnitTest(unittest.TestCase):
             path,
             params,
             query,
-            fragment) = urlparse.urlparse(url)
+            fragment) = urllib.parse.urlparse(url)
 
         expected = ('https', 'www.box.com', '/api/oauth2/authorize', '', '')
         returned = (scheme, netloc, path, params, fragment)
         self.assertEqual(returned, expected)
 
-        query_dict = urlparse.parse_qs(query)
+        query_dict = urllib.parse.parse_qs(query)
         self.assertEqual(query_dict['client_id'], [self.client_id])
         self.assertEqual(query_dict['response_type'], ['code'])
         self.assertEqual(query_dict['state'], ['authenticated'])
@@ -503,11 +503,11 @@ class BoxAuthenticateFlowUnitTest(unittest.TestCase):
             path,
             params,
             query,
-            fragment) = urlparse.urlparse(url)
+            fragment) = urllib.parse.urlparse(url)
 
-        query_dict = urlparse.parse_qs(query)
-        decoded_uri = urllib.unquote_plus(query_dict['redirect_uri'][0])
-        redirect_uri = urllib.unquote_plus(redirect_uri)
+        query_dict = urllib.parse.parse_qs(query)
+        decoded_uri = urllib.parse.unquote_plus(query_dict['redirect_uri'][0])
+        redirect_uri = urllib.parse.unquote_plus(redirect_uri)
         self.assertEqual(decoded_uri, redirect_uri)
 
     @httpretty.activate
@@ -533,7 +533,7 @@ class BoxAuthenticateFlowUnitTest(unittest.TestCase):
 
         query_body = httpretty.last_request().body
 
-        self.assertEqual(urlparse.parse_qs(query_body),
+        self.assertEqual(urllib.parse.parse_qs(query_body),
             {   "client_id": [self.client_id],
                 "client_secret": [self.client_secret],
                 "grant_type": ["authorization_code"],

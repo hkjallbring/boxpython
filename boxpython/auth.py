@@ -55,7 +55,7 @@ class BoxAuthenticateFlow(object):
         response = self.box_request.get_access_token(authorization_code)
         try:
             att = response.json()
-        except Exception, ex:
+        except Exception as ex:
             raise BoxHttpResponseError(ex)
 
         if response.status_code >= 400:
