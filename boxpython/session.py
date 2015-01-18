@@ -580,10 +580,7 @@ class BoxSession(object):
         """
         extension = 'png'
         response = self.__request("PUT", "files/%s/thumbnail.%s?min_height=%d&min_width=%d" %
-                              (file_id, extension, size, size),
-                              data={"shared_link": {"access": "open",
-                                                    "can_download": True,
-                                                    "can_preview": True}})
+                              (file_id, extension, size, size))
         # if response.status_code == 202:
         print(type(response))
         return response
