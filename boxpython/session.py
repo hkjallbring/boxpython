@@ -125,8 +125,8 @@ class BoxSession(object):
         #     data_req = resp.data
         # else:
         #     data_req = ''
-        log_debug('Response from box.com: %s %s\nHEADERS:\n%s\nBODY:\n%s' %
-                    (resp.method,
+        log_debug('Response from box.com: %d %s\nHEADERS:\n%s\nBODY:\n%s' %
+                    (resp.status_code,
                         resp.url,
                         resp.headers,
                         # data_req,
