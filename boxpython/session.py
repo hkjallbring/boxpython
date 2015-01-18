@@ -582,7 +582,7 @@ class BoxSession(object):
         response = self.__request("GET", "files/%s/thumbnail.%s?min_height=%d&min_width=%d" %
                               (file_id, extension, size, size))
         # if response.status_code == 202:
-        print(type(response))
+        log_debug(response)
         return response
 
 show_debug_messages = False
