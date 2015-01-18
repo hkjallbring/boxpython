@@ -65,6 +65,7 @@ class BoxSession(object):
             log_debug('Response from box.com: %s. {Streamed content}' % (response,))
         else:
             log_debug('Response from box.com: %s. %s' %(response, response.text))
+            self.__log_debug_response(response)
 
         try:
             if stream:
@@ -118,6 +119,18 @@ class BoxSession(object):
             att = self.__check_response(resp, stream)
 
         return att
+
+    def __log_debug_response(self, resp):
+        # if hasattr(resp, 'data'):
+        #     data_req = resp.data
+        # else:
+        #     data_req = ''
+        log_debug('Response from box.com: %s %s\nHEADERS:\n%s\nBODY:\n%s' %
+                    (resp.method,
+                        resp.url,
+                        resp.headers,
+                        # data_req,
+                        resp.body))
 
     def __log_debug_request(self, resp):
         if hasattr(resp.request, 'data'):
