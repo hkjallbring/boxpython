@@ -565,6 +565,28 @@ class BoxSession(object):
         """
         return self.__request("GET", "users/me")
 
+    def create_shared_link(self, file_id, **kwargs):
+        return self.__request("PUT", "files/%s" % (file_id, ),
+                              data={"shared_link": {"access": "open",
+                                                    "can_download": True,
+                                                    "can_preview": True}})
+
+    def create_thumbnail(self, file_id, size=128):
+        """
+        https://developers.box.com/docs/#files-get-a-thumbnail-for-a-file
+        :param file_id:
+        :param size: valid values are: 32, 64, 128, 256
+        :return:
+        """
+        extension = 'png'
+        response = self.__request("PUT", "files/%s/thumbnail.%s?min_height=%d&min_width=%d" %
+                              (file_id, extension, size, size),
+                              data={"shared_link": {"access": "open",
+                                                    "can_download": True,
+                                                    "can_preview": True}})
+        # if response.status_code == 202:
+        print(type(response))
+        return response
 
 show_debug_messages = False
 
