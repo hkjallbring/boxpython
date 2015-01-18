@@ -65,7 +65,6 @@ class BoxSession(object):
             log_debug('Response from box.com: %s. {Streamed content}' % (response,))
         else:
             log_debug('Response from box.com: %s. %s' %(response, response.text))
-            self.__log_debug_response(response)
 
         try:
             if stream:
@@ -121,16 +120,8 @@ class BoxSession(object):
         return att
 
     def __log_debug_response(self, resp):
-        # if hasattr(resp, 'data'):
-        #     data_req = resp.data
-        # else:
-        #     data_req = ''
-        log_debug('Response from box.com: %d %s\nHEADERS:\n%s\nBODY:\n%s' %
-                    (resp.status_code,
-                        resp.url,
-                        resp.headers,
-                        # data_req,
-                        resp.body))
+        log_debug('Response from box.com: %s:\n%s' %
+                    (resp, vars(resp)))
 
     def __log_debug_request(self, resp):
         if hasattr(resp.request, 'data'):
@@ -592,10 +583,12 @@ class BoxSession(object):
         :return:
         """
         extension = 'png'
-        response = self.__request("GET", "files/%s/thumbnail.%s?min_height=%d&min_width=%d" %
-                              (file_id, extension, size, size))
-        # if response.status_code == 202:
-        log_debug(response)
+        response = self.__request("GET",
+                                  "files/%s/thumbnail.%s?min_height=%d&min_width=%d" %
+                                    (file_id, extension, size, size),
+                                  stream=True)
+        # TODO:  response.status_code == 202 -- not ready
+        self.__log_debug_response(response)
         return response
 
 show_debug_messages = False
