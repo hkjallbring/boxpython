@@ -579,7 +579,7 @@ class BoxSession(object):
         :return:
         """
         extension = 'png'
-        response = self.__request("PUT", "files/%s/thumbnail.%s?min_height=%d&min_width=%d" %
+        response = self.__request("GET", "files/%s/thumbnail.%s?min_height=%d&min_width=%d" %
                               (file_id, extension, size, size))
         # if response.status_code == 202:
         print(type(response))
