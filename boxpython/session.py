@@ -1,7 +1,9 @@
 from .request import BoxRestRequest
 from .upload import MultipartUploadWrapper
 from .exceptions import BoxError, BoxHttpResponseError
+import logging
 
+logger = logging.getLogger("boxpython")
 
 class BoxSession(object):
     """Manage files and folder from Box.
@@ -580,21 +582,40 @@ class BoxSession(object):
         https://developers.box.com/docs/#files-get-a-thumbnail-for-a-file
         :param file_id:
         :param size: valid values are: 32, 64, 128, 256
-        :return:
+
+        Returns
+
+        There are three success cases that your application needs to account for:
+          If the thumbnail isn’t available yet, a 202 Accepted HTTP status will be returned, including a Location header pointing to a placeholder graphic that can be used until the thumbnail is returned. A Retry-After header will also be returned, indicating the time in seconds after which the thumbnail will be available. Your application should only attempt to get the thumbnail again after Retry-After time.
+          If Box can’t generate a thumbnail for this file type, a 302 Found response will be returned, redirecting to a placeholder graphic in the requested size for this particular file type, e.g. this for a CSV file).
+          If the thumbnail is available, a 200 OK response will be returned with the contents of the thumbnail in the body
+          If Box is unable to generate a thumbnail for this particular file, a 404 Not Found response will be returned with a code of preview_cannot_be_generated.
+          If there are any bad parameters sent in, a standard 400 Bad Request will be returned.
         """
         extension = 'png'
-        response = self.__request("GET",
-                                  "files/%s/thumbnail.%s?min_height=%d&min_width=%d" %
-                                    (file_id, extension, size, size),
-                                  stream=True)
-        # TODO:  response.status_code == 202 -- not ready
-        self.__log_debug_response(response)
-        return response
+        try:
+            response = self.__request("GET",
+                                      "files/%s/thumbnail.%s?min_height=%d&min_width=%d" %
+                                        (file_id, extension, size, size),
+                                      stream=True)
+            self.__log_debug_response(response)
+            if response.status_code == 202:
+                logger.debug("Thumbnail not ready")
+            elif response.status_code == 302:
+                logger.warning("Can’t generate a thumbnail for this file type")
+            return response
+        except BoxError as e:
+            if e.code == 404:
+                logger.warning("Box is unable to generate a thumbnail for %s", file_id)
+            elif e.code == 400:
+                logger.error("Bad parameters sent in or other error: %s", e.message)
+            else:
+                logger.exception(e)
+            return None
 
 show_debug_messages = False
 
 def log_debug(message):
     if show_debug_messages == False:
         return
-    print('------------------------')
-    print(message)
+    logger.debug(message)
