@@ -605,9 +605,9 @@ class BoxSession(object):
                 logger.warning("Can’t generate a thumbnail for this file type")
             return response
         except BoxError as e:
-            if e.code == 404:
+            if e.status == 404:
                 logger.warning("Box is unable to generate a thumbnail for %s", file_id)
-            elif e.code == 400:
+            elif e.status == 400:
                 logger.error("Bad parameters sent in or other error: %s", e.message)
             else:
                 logger.exception(e)
