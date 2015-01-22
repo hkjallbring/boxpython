@@ -571,11 +571,14 @@ class BoxSession(object):
         """
         return self.__request("GET", "users/me")
 
-    def create_shared_link(self, file_id, **kwargs):
+    def create_shared_link(self, file_id,
+                           access="open",
+                           can_download=True,
+                           can_preview=True):
         return self.__request("PUT", "files/%s" % (file_id, ),
-                              data={"shared_link": {"access": "open",
-                                                    "can_download": True,
-                                                    "can_preview": True}})
+                              data={"shared_link": {"access": access,
+                                                    "can_download": can_download,
+                                                    "can_preview": can_preview}})
 
     def create_thumbnail(self, file_id, size=128):
         """
