@@ -64,9 +64,9 @@ class BoxSession(object):
 
     def __check_response(self, response, stream=False):
         if stream:
-            log_debug('Response from box.com: %s. {Streamed content}' % (response,))
+            logger.debug('Response from box.com: %s. {Streamed content}' % (response,))
         else:
-            log_debug('Response from box.com: %s. %s' %(response, response.text))
+            logger.debug('Response from box.com: %s. %s' %(response, response.text))
 
         try:
             if stream:
@@ -84,7 +84,7 @@ class BoxSession(object):
             return att
 
     def __refresh_access_token(self):
-        log_debug('Access token expired, refreshing it from refresh token')
+        logger.debug('Access token expired, refreshing it from refresh token')
         resp = self.box_request.refresh_access_token(self.refresh_token)
         self.__log_debug_request(resp)
         att = self.__check_response(resp)
@@ -122,7 +122,7 @@ class BoxSession(object):
         return att
 
     def __log_debug_response(self, resp):
-        log_debug('Response from box.com: %s:\n%s' %
+        logger.debug('Response from box.com: %s:\n%s' %
                     (resp, vars(resp)))
 
     def __log_debug_request(self, resp):
@@ -130,7 +130,7 @@ class BoxSession(object):
             data_req = resp.request.data
         else:
             data_req = ''
-        log_debug('Request made to box.com: %s %s\nHEADERS:\n%s\nDATA:\n%s\nBODY:\n%s' %
+        logger.debug('Request made to box.com: %s %s\nHEADERS:\n%s\nDATA:\n%s\nBODY:\n%s' %
                     (resp.request.method,
                         resp.request.url,
                         resp.request.headers,
@@ -615,10 +615,3 @@ class BoxSession(object):
             else:
                 logger.exception(e)
             return None
-
-show_debug_messages = False
-
-def log_debug(message):
-    if show_debug_messages == False:
-        return
-    logger.debug(message)
