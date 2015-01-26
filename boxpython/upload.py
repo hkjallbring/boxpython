@@ -35,7 +35,7 @@ class MultipartUploadWrapper(object):
         boundary = _make_boundary()
         content_length = 0
 
-        boundary_string = bytes('--%s\r\n' % (boundary))
+        boundary_string = str.encode('--%s\r\n' % (boundary))
         for fieldname, value in iter_fields(files):
             content_length += len(boundary_string)
 
