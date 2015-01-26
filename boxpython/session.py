@@ -66,7 +66,7 @@ class BoxSession(object):
         if stream:
             logger.debug('Response from box.com: %s. {Streamed content}' % (response,))
         else:
-            logger.debug('Response from box.com: %s. %s' %(response, response.text[:min(len(response.text), 10000)]))
+            logger.debug('Response from box.com: %s. %s' %(response, response.text[:min(len(response.text), 2000)]))
 
         try:
             if stream:
