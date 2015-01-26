@@ -64,9 +64,9 @@ class BoxSession(object):
 
     def __check_response(self, response, stream=False):
         if stream:
-            logger.debug('Response from box.com: %s. {Streamed content}' % (response,))
+            log_debug('Response from box.com: %s. {Streamed content}' % (response,))
         else:
-            logger.debug('Response from box.com: %s. %s' %(response, response.text[:min(len(response.text), 2000)]))
+            log_debug('Response from box.com: %s. %s' %(response, response.text[:min(len(response.text), 2000)]))
 
         try:
             if stream:
@@ -84,7 +84,7 @@ class BoxSession(object):
             return att
 
     def __refresh_access_token(self):
-        logger.debug('Access token expired, refreshing it from refresh token')
+        log_debug('Access token expired, refreshing it from refresh token')
         resp = self.box_request.refresh_access_token(self.refresh_token)
         self.__log_debug_request(resp)
         att = self.__check_response(resp)
@@ -122,7 +122,7 @@ class BoxSession(object):
         return att
 
     def __log_debug_response(self, resp):
-        logger.debug('Response from box.com: %s:\n%s' %
+        log_debug('Response from box.com: %s:\n%s' %
                     (resp, vars(resp)))
 
     def __log_debug_request(self, resp):
@@ -130,7 +130,7 @@ class BoxSession(object):
             data_req = resp.request.data
         else:
             data_req = ''
-        logger.debug('Request made to box.com: %s %s\nHEADERS:\n%s\nDATA:\n%s\nBODY:\n%s' %
+        log_debug('Request made to box.com: %s %s\nHEADERS:\n%s\nDATA:\n%s\nBODY:\n%s' %
                     (resp.request.method,
                         resp.request.url,
                         resp.request.headers,
@@ -388,18 +388,90 @@ class BoxSession(object):
         """
 
         try:
-            return self.__do_chunk_upload_file(name, folder_id, file_path,
+            return self.__do_chunk_upload_file(name,
+                                               folder_id,
+                                               None,
+                                               file_path,
                                     progress_callback,
                                     chunk_size)
         except BoxError as ex:
             if ex.status != 401:
                 raise
             #tokens had been refreshed, so we start again the upload
-            return self.__do_chunk_upload_file(name, folder_id, file_path,
+            return self.__do_chunk_upload_file(name,
+                                               folder_id,
+                                               None,
+                                               file_path,
                                     progress_callback,
                                     chunk_size)
 
-    def __do_chunk_upload_file(self, name, folder_id, file_path,
+    def chunk_upload_new_file_version(self, name,
+                                      folder_id,
+                                      file_id,
+                                      file_path,
+                            progress_callback=None,
+                            chunk_size=1024*1024*1):
+        """Upload a new version of a file into a folder, chunk by chunk.
+
+        The whole file is never loaded in memory.
+        Use this function for big file.
+
+        The callback(transferred, total) to let you know the upload progress.
+        Upload can be cancelled if the callback raise an Exception.
+
+        >>> def progress_callback(transferred, total):
+        ...    print 'Uploaded %i bytes of %i' % (transferred, total, )
+        ...    if user_request_cancel:
+        ...       raise MyCustomCancelException()
+
+        Args:
+            name (str): Name of the file on your Box storage.
+
+            folder_id (int): ID of the folder where to upload the file.
+
+            file_id (int): ID of the file to update.
+
+            file_path (str): Local path of the file to upload.
+
+            progress_callback (func): Function called each time a chunk is uploaded.
+
+            chunk_size (int): Size of chunks.
+
+        Returns:
+            dict. Response from Box.
+
+        Raises:
+            BoxError: An error response is returned from Box (status_code >= 400).
+
+            BoxHttpResponseError: Response from Box is malformed.
+
+            requests.exceptions.*: Any connection related problem.
+        """
+
+        try:
+            return self.__do_chunk_upload_file(name,
+                                               folder_id,
+                                               file_id,
+                                               file_path,
+                                    progress_callback,
+                                    chunk_size)
+        except BoxError as ex:
+            if ex.status != 401:
+                raise
+            #tokens had been refreshed, so we start again the upload
+            return self.__do_chunk_upload_file(name,
+                                               folder_id,
+                                               file_id,
+                                               file_path,
+                                    progress_callback,
+                                    chunk_size)
+
+
+
+    def __do_chunk_upload_file(self, name,
+                                    folder_id,
+                                    file_id_to_update,
+                                    file_path,
                                     progress_callback,
                                     chunk_size):
 
@@ -409,7 +481,12 @@ class BoxSession(object):
                                           'filename': (name, file_obj)},
                                           progress_callback=progress_callback,
                                           chunk_size=chunk_size)
-            return self.__request("POST", "files/content",
+
+            if file_id_to_update is None:
+                cmd = "files/content"
+            else:
+                cmd = "files/" + str(file_id_to_update) + "/content"
+            return self.__request("POST", cmd,
                                 data = muw,
                                 headers = muw.content_type_header,
                                 json_data = False,
@@ -603,7 +680,7 @@ class BoxSession(object):
                                       stream=True)
             self.__log_debug_response(response)
             if response.status_code == 202:
-                logger.debug("Thumbnail not ready")
+                log_debug("Thumbnail not ready")
             elif response.status_code == 302:
                 logger.warning("Can’t generate a thumbnail for this file type")
             return response
@@ -615,3 +692,11 @@ class BoxSession(object):
             else:
                 logger.exception(e)
             return None
+
+
+MAX_MESSAGE_LENGTH = 2000
+
+def log_debug(message):
+    if len(message) > MAX_MESSAGE_LENGTH:
+        message = message[:MAX_MESSAGE_LENGTH]
+    logger.debug(message)

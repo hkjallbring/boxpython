@@ -35,7 +35,7 @@ class MultipartUploadWrapper(object):
         boundary = _make_boundary()
         content_length = 0
 
-        boundary_string = str.encode('--%s\r\n' % (boundary))
+        boundary_string = '--%s\r\n' % (boundary)
         for fieldname, value in iter_fields(files):
             content_length += len(boundary_string)
 
@@ -48,12 +48,12 @@ class MultipartUploadWrapper(object):
                 data = value
                 content_disposition_string =  (('Content-Disposition: form-data; name="%s"\r\n' % (fieldname))
                                             + 'Content-Type: text/plain\r\n\r\n')
-            request_list.append(BytesIO(str(boundary_string + content_disposition_string)))
+            request_list.append(BytesIO(str.encode(boundary_string + content_disposition_string)))
             content_length += len(content_disposition_string)
             if hasattr(data, 'read'):
                 data_stream = data
             else:
-                data_stream = BytesIO(str(data))
+                data_stream = BytesIO(str.encode(data))
 
             data_stream.seek(0,2)
             data_size = data_stream.tell()
@@ -66,14 +66,14 @@ class MultipartUploadWrapper(object):
             request_list.append(BytesIO(end_string))
             content_length += len(end_string)
 
-        request_list.append(BytesIO(b'--%s--\r\n' % (boundary)))
+        request_list.append(BytesIO(str.encode('--%s--\r\n' % (boundary))))
         content_length += len(boundary_string)
 
         # There's a bug in httplib.py that generates a UnicodeDecodeError on binary uploads if
         # there are *any* unicode strings passed into headers as part of the requests call.
         # For this reason all strings are explicitly converted to non-unicode at this point.
-        self.content_type_header = {b'Content-Type': b'multipart/form-data; boundary=%s' % boundary}
-        self.content_length_header = {b'Content-Length': str(content_length)}
+        self.content_type_header = {b'Content-Type': str.encode('multipart/form-data; boundary=%s' % boundary)}
+        self.content_length_header = {b'Content-Length': str.encode(str(content_length))}
         self._body_parts = request_list
 
         self._content_length = content_length + 2
